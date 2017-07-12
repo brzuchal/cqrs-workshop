@@ -2,9 +2,9 @@ version: '2'
 
 services:
   web:
-    build: colinodell/php-7.2:apache
+    build: .
     ports:
-      - 6000:80
+      - 7000:80
     volumes:
       - .:/var/www/html
     environment:
@@ -13,6 +13,7 @@ services:
       - DB_USER=user
       - DB_PASSWORD=userpass
       - DB_NAME=workshop
+      - DB_PORT=3306
   mysql:
     image: mysql
     environment:
@@ -26,4 +27,4 @@ services:
      - PMA_ARBITRARY=1
     restart: always
     ports:
-     - 6001:80
+     - 7001:80
