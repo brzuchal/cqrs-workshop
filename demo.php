@@ -6,16 +6,21 @@ use App\Infrastructure\AccountRepository;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Driver\PDOException;
 use Doctrine\DBAL\DriverManager;
+use Prooph\Common\Event\ProophActionEventEmitter;
 use Prooph\Common\Messaging\FQCNMessageFactory;
 use Prooph\EventSourcing\Aggregate\AggregateRepository;
 use Prooph\EventSourcing\Aggregate\AggregateType;
 use Prooph\EventSourcing\EventStoreIntegration\AggregateTranslator;
+use Prooph\EventStore\ActionEventEmitterEventStore;
 use Prooph\EventStore\Exception\StreamExistsAlready;
 use Prooph\EventStore\Pdo\MySqlEventStore;
 use Prooph\EventStore\Pdo\PersistenceStrategy\MySqlAggregateStreamStrategy;
 use Prooph\EventStore\Pdo\PersistenceStrategy\MySqlSimpleStreamStrategy;
+use Prooph\EventStore\Pdo\Projection\MySqlProjectionManager;
 use Prooph\EventStore\Stream;
 use Prooph\EventStore\StreamName;
+use Prooph\EventStore\TransactionalActionEventEmitterEventStore;
+use Prooph\EventStoreBusBridge\EventPublisher;
 use Prooph\ServiceBus\CommandBus;
 use Prooph\ServiceBus\EventBus;
 use Prooph\ServiceBus\Plugin\Router\CommandRouter;
@@ -46,6 +51,13 @@ try {
     $stmt->execute();
 } catch (\PDOException | PDOException | \Throwable $exception) {}
 
+try {
+    $schemaFile = __DIR__ . '/vendor/prooph/pdo-event-store/scripts/mysql/02_projections_table.sql';
+    $stmt = $conn->prepare(\file_get_contents($schemaFile));
+    $stmt->execute();
+} catch (\PDOException | PDOException | \Throwable $exception) {}
+
+
 $eventBus = new EventBus();
 $eventStore = new MySqlEventStore(
     new FQCNMessageFactory(),
@@ -53,6 +65,9 @@ $eventStore = new MySqlEventStore(
 //    new MySqlAggregateStreamStrategy()
     new MySqlSimpleStreamStrategy()
 );
+
+//$onEventStrategy = new \Prooph\ServiceBus\Plugin\InvokeStrategy\OnEventStrategy();
+//$onEventStrategy->attachToMessageBus($eventBus);
 
 $streamName = new StreamName('event_stream');
 $singleStream = new Stream($streamName, new ArrayIterator());
@@ -64,6 +79,19 @@ try {
 
 $eventRouter = new EventRouter();
 $eventRouter->attachToMessageBus($eventBus);
+
+
+$eventPublisher = new EventPublisher($eventBus);
+
+// Important! Replacing MySqlEventStore with ActionEvent emiting one
+$eventStore = new ActionEventEmitterEventStore($eventStore, new ProophActionEventEmitter());
+$eventPublisher->attachToEventStore($eventStore);
+
+
+$projectionManager = new MySqlProjectionManager(
+    $eventStore,
+    $conn->getWrappedConnection()
+);
 
 $commandBus = new CommandBus();
 
@@ -95,3 +123,12 @@ $commandBus->dispatch($createAccountCommand);
 
 $account = $accountRepository->get($id);
 dump($account);
+
+
+
+$accountProjection = $projectionManager->createProjection('account_projection');
+$accountProjection->fromAll()->whenAny(function () {
+//    dump(func_get_args());
+    dump('projection');
+})->run(false);
+// ^ keepRunning = true enters event loop running all the time
