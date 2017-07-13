@@ -130,5 +130,5 @@ $accountProjection = $projectionManager->createProjection('account_projection');
 $accountProjection->fromAll()->whenAny(function () {
 //    dump(func_get_args());
     dump('projection');
-})->run(false);
+})->run(true);
 // ^ keepRunning = true enters event loop running all the time
