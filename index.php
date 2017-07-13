@@ -24,13 +24,13 @@ use Prooph\ServiceBus\Plugin\Router\CommandRouter;
 use Prooph\ServiceBus\Plugin\Router\EventRouter;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
 $app = new \Silex\Application();
+$app['debug'] = true;
 $app['output'] = function () {
     return new ConsoleOutput();
 };
@@ -142,13 +142,18 @@ $eventRouter->route(AccountWasCreated::class)->to(function (AccountWasCreated $e
     $output->writeln("<info>AccountWasCreated</info>: {{$event->aggregateId()}} with currency in {$event->currency()}");
 });
 
-$app->get('/accounts', function (Request $request, $app) {
+$app->get('/accounts', function (Request $request) use ($app) {
 
 });
-$app->put('/accounts', function (Request $request, $app) {
-    $id = Uuid::uuid4();
-    $createAccountCommand = new CreateAccount($id, 'PLN');
-    $app['command_bus']->dispatch($createAccountCommand);
+$app->put('/accounts/{id}', function ($id, Request $request) use ($app) {
+    $currency = $request->request->get('currency');
+    $createAccountCommand = new CreateAccount(
+        Uuid::fromString($id),
+        $currency
+    );
+    /** @var CommandBus $commandBus */
+    $commandBus = $app['command_bus'];
+    $commandBus->dispatch($createAccountCommand);
 
     return new Response(null, Response::HTTP_CREATED);
 });
