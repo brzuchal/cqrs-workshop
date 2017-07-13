@@ -8,13 +8,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $app = new \Silex\Application();
 $app['debug'] = true;
 
-require_once __DIR__ . '/services.php';
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../config/services.php';
+require_once __DIR__ . '/../config/bootstrap.php';
 
 // app
 $app->get('/accounts', function () use ($app) {

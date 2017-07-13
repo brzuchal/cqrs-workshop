@@ -1,4 +1,9 @@
 RewriteEngine on
+RewriteCond %{DOCUMENT_ROOT}/web/$1 -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/web/$1 -d [OR]
+RewriteCond %{DOCUMENT_ROOT}/web/$1 -l
+RewriteRule (?!^web/)^(.*)$ /web/$1 [L,NC]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ /index.php?path=$1 [NC,L,QSA]
+RewriteRule ^(.*)$ /web/index.php?path=$1 [NC,L,QSA]

@@ -29,7 +29,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
 /** @var \Silex\Application $app */
 $app->register(new JDesrosiers\Silex\Provider\JmsSerializerServiceProvider(), array(
-    'serializer.srcDir' => __DIR__ . '/vendor/jms/serializer/src',
+    'serializer.srcDir' => __DIR__ . '/../vendor/jms/serializer/src',
 ));
 $app['output'] = function () {
     return new ConsoleOutput();
@@ -48,13 +48,13 @@ $app['db.conn'] = function () {
 
     // run only once
     try {
-        $schemaFile = __DIR__ . '/vendor/prooph/pdo-event-store/scripts/mysql/01_event_streams_table.sql';
+        $schemaFile = __DIR__ . '/../vendor/prooph/pdo-event-store/scripts/mysql/01_event_streams_table.sql';
         $stmt = $conn->prepare(\file_get_contents($schemaFile));
         $stmt->execute();
     } catch (\PDOException | PDOException | \Throwable $exception) {}
 
     try {
-        $schemaFile = __DIR__ . '/vendor/prooph/pdo-event-store/scripts/mysql/02_projections_table.sql';
+        $schemaFile = __DIR__ . '/../vendor/prooph/pdo-event-store/scripts/mysql/02_projections_table.sql';
         $stmt = $conn->prepare(\file_get_contents($schemaFile));
         $stmt->execute();
     } catch (\PDOException | PDOException | \Throwable $exception) {}
