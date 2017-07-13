@@ -6,6 +6,8 @@ use App\Infrastructure\AccountRepository;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
+use JMS\Serializer\Serializer;
+use JMS\Serializer\SerializerBuilder;
 use Prooph\Common\Event\ProophActionEventEmitter;
 use Prooph\Common\Messaging\FQCNMessageFactory;
 use Prooph\EventSourcing\Aggregate\AggregateRepository;
@@ -37,6 +39,9 @@ $app = new \Silex\Application();
 $app['debug'] = true;
 
 // services
+$app->register(new JDesrosiers\Silex\Provider\JmsSerializerServiceProvider(), array(
+    'serializer.srcDir' => __DIR__ . '/vendor/jms/serializer/src',
+));
 $app['output'] = function () {
     return new ConsoleOutput();
 };
@@ -202,5 +207,14 @@ $app->put('/accounts/{id}', function ($id, Request $request) use ($app) {
     $commandBus->dispatch($createAccountCommand);
 
     return new Response(null, Response::HTTP_CREATED);
+});
+$app->get('/accounts/{id}', function ($id, Request $request) use ($app) {
+    /** @var Connection $dbConn */
+    $dbConn = $app['db.conn'];
+    $stmt = $dbConn->executeQuery('SELECT * FROM accounts WHERE id = :id', [
+        'id' => $id,
+    ]);
+    $stmt->execute();
+    return new JsonResponse($stmt->fetch());
 });
 $app->run();
