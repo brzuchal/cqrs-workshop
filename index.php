@@ -189,6 +189,7 @@ $app->before(function (Request $request) {
 });
 // eof bootstrap
 
+// app
 $app->get('/accounts', function (Request $request) use ($app) {
     /** @var Connection $dbConn */
     $dbConn = $app['db.conn'];
@@ -217,4 +218,6 @@ $app->get('/accounts/{id}', function ($id, Request $request) use ($app) {
     $stmt->execute();
     return new JsonResponse($stmt->fetch());
 });
+// eof app
+
 $app->run();
