@@ -1,0 +1,25 @@
+#!/usr/bin/env php
+<?php declare(strict_types = 1);
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$console = new Application();
+$console->add(new class extends Command {
+    protected function configure()
+    {
+        $this->setName('uuid');
+        $this->setDescription('Generates UUIDv4');
+    }
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $output->writeln(Uuid::uuid4()->toString());
+        return 0;
+    }
+});
+
+$console->run();
